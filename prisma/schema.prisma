@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum LayoutVariant {
+  hero_centered
+  hero_split
+  minimal
+}
+
+enum BorderRadius {
+  sharp
+  rounded
+  pill
+}
+
+enum HeaderStyle {
+  transparent
+  solid
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  passwordHash String
+  role         Role      @default(CUSTOMER)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  bookings     Booking[]
+  reviews      Review[]
+  accounts     Account[]
+  sessions     Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Activity {
+  id                 String         @id @default(cuid())
+  title              String
+  slug               String         @unique
+  description        String
+  location           String
+  duration           Int
+  price              Float
+  images             Json
+  category           String
+  cancellationPolicy String         @default("Free cancellation up to 24 hours before the activity start time.")
+  cancellationHours  Int            @default(24)
+  isPublished        Boolean        @default(false)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  slots              ActivitySlot[]
+  bookings           Booking[]
+  reviews            Review[]
+}
+
+model ActivitySlot {
+  id          String    @id @default(cuid())
+  activityId  String
+  startTime   DateTime
+  endTime     DateTime
+  capacity    Int       @default(10)
+  bookedCount Int       @default(0)
+  activity    Activity  @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  bookings    Booking[]
+
+  @@index([activityId, startTime])
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  userId          String?
+  guestName       String?
+  guestEmail      String?
+  activityId      String
+  slotId          String
+  guestCount      Int
+  totalPrice      Float
+  status          BookingStatus @default(PENDING)
+  stripeSessionId String?       @unique
+  reviewToken     String?       @unique
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  user            User?         @relation(fields: [userId], references: [id])
+  activity        Activity      @relation(fields: [activityId], references: [id])
+  slot            ActivitySlot  @relation(fields: [slotId], references: [id])
+  review          Review?
+
+  @@index([userId])
+  @@index([activityId])
+  @@index([guestEmail])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  userId     String?
+  guestName  String?
+  activityId String
+  bookingId  String   @unique
+  rating     Int
+  comment    String
+  isVisible  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id])
+  activity   Activity @relation(fields: [activityId], references: [id])
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+
+  @@index([activityId])
+}
+
+model SiteTheme {
+  id              String        @id @default("default")
+  primaryColor    String        @default("#2563eb")
+  secondaryColor  String        @default("#1e40af")
+  accentColor     String        @default("#f59e0b")
+  backgroundColor String        @default("#ffffff")
+  textColor       String        @default("#171717")
+  fontFamily      String        @default("Inter")
+  logoUrl         String?
+  faviconUrl      String?
+  layoutVariant   LayoutVariant @default(hero_centered)
+  borderRadius    BorderRadius  @default(rounded)
+  headerStyle     HeaderStyle   @default(solid)
+  updatedAt       DateTime      @updatedAt
+}

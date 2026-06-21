@@ -1,0 +1,22 @@
+@import "tailwindcss";
+@import "react-day-picker/style.css";
+
+:root {
+  --color-primary: #2563eb;
+  --color-secondary: #1e40af;
+  --color-accent: #f59e0b;
+  --color-background: #ffffff;
+  --color-text: #171717;
+  --font-family: "Inter", system-ui, sans-serif;
+  --radius: 0.5rem;
+}
+
+@theme inline {
+  --font-sans: var(--font-family);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-family);
+}

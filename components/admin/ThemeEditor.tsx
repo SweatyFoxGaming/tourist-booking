@@ -74,7 +74,7 @@ export function ThemeEditor() {
   }
 
   if (!theme) {
-    return <div className="h-96 animate-pulse rounded-[var(--radius)] bg-gray-200" />;
+    return <div className="h-96 animate-pulse rounded-xl bg-slate-800" />;
   }
 
   const previewCss = themeToCssVariables(theme as Parameters<typeof themeToCssVariables>[0]);
@@ -211,7 +211,7 @@ export function ThemeEditor() {
               onChange={handleLogoUpload}
               disabled={uploading}
             />
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-slate-300">
               Or enter a URL:
             </p>
             <Input

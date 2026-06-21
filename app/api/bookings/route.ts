@@ -9,6 +9,7 @@ const guestBookingSchema = z.object({
   guestCount: z.number().int().min(1),
   guestName: z.string().min(1),
   guestEmail: z.string().email(),
+  guestPhone: z.string().optional(),
 });
 
 export async function GET(request: Request) {
@@ -101,6 +102,7 @@ export async function POST(request: Request) {
     guestCount,
     guestName: body.guestName,
     guestEmail: body.guestEmail,
+    guestPhone: body.guestPhone,
   });
 
   if (!parsed.success) {
@@ -114,6 +116,7 @@ export async function POST(request: Request) {
     data: {
       guestName: parsed.data.guestName,
       guestEmail: parsed.data.guestEmail,
+      guestPhone: parsed.data.guestPhone?.trim() || null,
       activityId: parsed.data.activityId,
       slotId: parsed.data.slotId,
       guestCount: parsed.data.guestCount,

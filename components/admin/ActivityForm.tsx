@@ -17,11 +17,19 @@ import {
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { asStringArray } from "@/lib/utils";
 
+type WholesalerOption = { id: string; name: string; isActive: boolean };
+
 type ActivityFormProps = {
   activityId?: string;
+  defaultWholesalerId?: string;
+  redirectTo?: string;
 };
 
-export default function ActivityForm({ activityId }: ActivityFormProps) {
+export default function ActivityForm({
+  activityId,
+  defaultWholesalerId,
+  redirectTo = "/admin/activities",
+}: ActivityFormProps) {
   const router = useRouter();
   const isEdit = !!activityId;
 
@@ -38,9 +46,20 @@ export default function ActivityForm({ activityId }: ActivityFormProps) {
       "Free cancellation up to 24 hours before the activity start time.",
     cancellationHours: "24",
     isPublished: false,
+    wholesalerId: defaultWholesalerId ?? "",
   });
+  const [wholesalers, setWholesalers] = useState<WholesalerOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/wholesalers")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setWholesalers(data);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (activityId) {
@@ -60,6 +79,7 @@ export default function ActivityForm({ activityId }: ActivityFormProps) {
             cancellationPolicy: data.cancellationPolicy ?? form.cancellationPolicy,
             cancellationHours: String(data.cancellationHours ?? 24),
             isPublished: data.isPublished,
+            wholesalerId: data.wholesalerId ?? "",
           });
         });
     }
@@ -83,6 +103,7 @@ export default function ActivityForm({ activityId }: ActivityFormProps) {
       price: parseFloat(form.price),
       cancellationHours: parseInt(form.cancellationHours, 10),
       images: form.images.split("\n").map((s) => s.trim()).filter(Boolean),
+      wholesalerId: form.wholesalerId || null,
     };
 
     const res = await fetch(
@@ -100,18 +121,18 @@ export default function ActivityForm({ activityId }: ActivityFormProps) {
       return;
     }
 
-    router.push("/admin/activities");
+    router.push(redirectTo);
   }
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="text-2xl font-bold">
-        {isEdit ? "Edit Activity" : "New Activity"}
+      <h1 className="text-2xl font-bold text-white">
+        {isEdit ? "Edit Activity" : defaultWholesalerId ? "New Partner Activity" : "New Activity"}
       </h1>
 
-      <Card className="mt-8">
+      <Card className="mt-8 border-slate-800 bg-slate-900/60">
         <CardHeader>
-          <CardTitle>Activity Details</CardTitle>
+          <CardTitle className="text-white">Activity Details</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -145,6 +166,31 @@ export default function ActivityForm({ activityId }: ActivityFormProps) {
                 className="mt-1"
               />
             </div>
+            {wholesalers.length > 0 && (
+              <div>
+                <Label htmlFor="wholesaler">Wholesale partner (optional)</Label>
+                <Select
+                  value={form.wholesalerId || "none"}
+                  onValueChange={(v) =>
+                    setForm({ ...form, wholesalerId: v === "none" ? "" : v })
+                  }
+                  disabled={!!defaultWholesalerId && !isEdit}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Own activity (no partner)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Own activity (no partner)</SelectItem>
+                    {wholesalers.map((w) => (
+                      <SelectItem key={w.id} value={w.id}>
+                        {w.name}
+                        {!w.isActive ? " (inactive)" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="location">Location</Label>
@@ -241,9 +287,9 @@ export default function ActivityForm({ activityId }: ActivityFormProps) {
                 checked={form.isPublished}
                 onChange={(e) => setForm({ ...form, isPublished: e.target.checked })}
               />
-              <span className="text-sm">Published</span>
+              <span className="text-sm text-slate-200">Published</span>
             </label>
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-red-400">{error}</p>}
             <div className="flex gap-3">
               <Button type="submit" disabled={loading}>
                 {loading ? "Saving..." : "Save Activity"}

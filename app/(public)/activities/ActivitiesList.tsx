@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
+import { useTranslations } from "@/lib/i18n/client";
 
 type Activity = {
   id: string;
@@ -23,9 +24,11 @@ type Activity = {
   category: string;
   avgRating?: number | null;
   reviewCount?: number;
+  wholesaler?: { id: string; name: string; slug: string } | null;
 };
 
 export default function ActivitiesList() {
+  const t = useTranslations("activities");
   const [activities, setActivities] = useState<Activity[]>([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
@@ -49,13 +52,8 @@ export default function ActivitiesList() {
     <div>
       <section className="border-b border-gray-200 bg-gradient-to-br from-[var(--color-primary)]/10 to-transparent px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <h1 className="text-3xl font-bold text-[var(--color-text)] sm:text-4xl">
-            Activities
-          </h1>
-          <p className="mt-2 max-w-2xl text-gray-600">
-            Browse and book from our collection of curated tourist experiences.
-            No account required — select an activity, pick your date, and checkout as a guest.
-          </p>
+          <h1 className="text-3xl font-bold text-[var(--color-text)] sm:text-4xl">{t("title")}</h1>
+          <p className="mt-2 max-w-2xl text-gray-600">{t("subtitle")}</p>
         </div>
       </section>
 
@@ -64,7 +62,7 @@ export default function ActivitiesList() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <Input
-              placeholder="Search activities..."
+              placeholder={t("searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10"
@@ -72,10 +70,10 @@ export default function ActivitiesList() {
           </div>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Category" />
+              <SelectValue placeholder={t("category")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="all">{t("allCategories")}</SelectItem>
               {categories.map((cat) => (
                 <SelectItem key={cat} value={cat}>
                   {cat}
@@ -101,7 +99,7 @@ export default function ActivitiesList() {
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-500">No activities found.</p>
+          <p className="text-center text-gray-500">{t("noResults")}</p>
         )}
       </div>
     </div>

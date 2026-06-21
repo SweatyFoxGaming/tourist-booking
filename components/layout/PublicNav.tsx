@@ -6,9 +6,11 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { publicNavLinks, isNavActive } from "@/components/layout/nav-links";
+import { useTranslations } from "@/lib/i18n/client";
 
 export function PublicNav() {
   const pathname = usePathname();
+  const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
 
   return (
@@ -25,7 +27,7 @@ export function PublicNav() {
                 : "text-[var(--color-text)]"
             )}
           >
-            {link.label}
+            {t(link.labelKey)}
           </Link>
         ))}
       </nav>
@@ -34,7 +36,7 @@ export function PublicNav() {
         type="button"
         className="rounded-[var(--radius)] p-2 text-[var(--color-text)] md:hidden"
         onClick={() => setOpen(!open)}
-        aria-label={open ? "Close menu" : "Open menu"}
+        aria-label={open ? t("closeMenu") : t("openMenu")}
       >
         {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </button>
@@ -54,7 +56,7 @@ export function PublicNav() {
                     : "text-[var(--color-text)] hover:bg-gray-50"
                 )}
               >
-                {link.label}
+                {t(link.labelKey)}
               </Link>
             ))}
           </nav>

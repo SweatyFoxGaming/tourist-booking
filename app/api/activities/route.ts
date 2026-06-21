@@ -32,8 +32,12 @@ export async function GET(request: Request) {
     where,
     orderBy: { createdAt: "desc" },
     include: admin
-      ? { _count: { select: { bookings: true, slots: true } } }
+      ? {
+          wholesaler: { select: { id: true, name: true, slug: true, isActive: true } },
+          _count: { select: { bookings: true, slots: true } },
+        }
       : {
+          wholesaler: { select: { id: true, name: true, slug: true, isActive: true } },
           reviews: {
             where: { isVisible: true },
             select: { rating: true },
@@ -43,18 +47,32 @@ export async function GET(request: Request) {
 
   const result = activities.map((activity) => {
     const reviews = "reviews" in activity ? activity.reviews : null;
+    const wholesalerData =
+      "wholesaler" in activity ? activity.wholesaler : null;
+    const wholesaler =
+      wholesalerData && (admin || wholesalerData.isActive)
+        ? {
+            id: wholesalerData.id,
+            name: wholesalerData.name,
+            slug: wholesalerData.slug,
+          }
+        : null;
     if (Array.isArray(reviews)) {
       const ratings = reviews.map((r: { rating: number }) => r.rating);
       const avgRating =
         ratings.length > 0
           ? ratings.reduce((a, b) => a + b, 0) / ratings.length
           : null;
-      const { reviews: _, ...rest } = activity as typeof activity & {
+      const { reviews: _, wholesaler: __, ...rest } = activity as typeof activity & {
         reviews: { rating: number }[];
+        wholesaler?: { id: string; name: string; slug: string; isActive: boolean } | null;
       };
-      return { ...rest, avgRating, reviewCount: reviews.length };
+      return { ...rest, wholesaler, avgRating, reviewCount: reviews.length };
     }
-    return activity;
+    const { wholesaler: w, ...rest } = activity as typeof activity & {
+      wholesaler?: { id: string; name: string; slug: string } | null;
+    };
+    return { ...rest, wholesaler: w ?? null };
   });
 
   return NextResponse.json(result);
@@ -83,6 +101,7 @@ export async function POST(request: Request) {
       cancellationPolicy: body.cancellationPolicy,
       cancellationHours: parseInt(body.cancellationHours ?? "24", 10),
       isPublished: body.isPublished ?? false,
+      wholesalerId: body.wholesalerId || null,
     },
   });
 

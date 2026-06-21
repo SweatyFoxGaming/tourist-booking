@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatPrice } from "@/lib/utils";
 import { Clock, Users } from "lucide-react";
+import { useLocale, useTranslations } from "@/lib/i18n/client";
+import type { Locale } from "@/lib/i18n/locale";
 
 type Slot = {
   id: string;
@@ -35,6 +37,8 @@ export default function BookingPage({
 }) {
   const router = useRouter();
   const { data: session } = useSession();
+  const t = useTranslations("booking");
+  const locale = useLocale() as Locale;
   const isLoggedIn = !!session?.user;
   const [activity, setActivity] = useState<Activity | null>(null);
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -43,6 +47,7 @@ export default function BookingPage({
   const [guestCount, setGuestCount] = useState(1);
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -86,6 +91,9 @@ export default function BookingPage({
     if (!isLoggedIn) {
       bookingPayload.guestName = guestName.trim();
       bookingPayload.guestEmail = guestEmail.trim();
+      if (guestPhone.trim()) {
+        bookingPayload.guestPhone = guestPhone.trim();
+      }
     }
 
     const bookingRes = await fetch("/api/bookings", {
@@ -96,14 +104,14 @@ export default function BookingPage({
 
     if (!bookingRes.ok) {
       const data = await bookingRes.json();
-      setError(data.error ?? "Failed to create booking");
+      setError(data.error ?? t("createFailed"));
       setLoading(false);
       return;
     }
 
     const booking = await bookingRes.json();
 
-    const checkoutRes = await fetch("/api/stripe/checkout", {
+    const checkoutRes = await fetch("/api/payfast/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ bookingId: booking.id }),
@@ -111,12 +119,37 @@ export default function BookingPage({
 
     const checkoutData = await checkoutRes.json();
 
-    if (checkoutData.url) {
-      router.push(checkoutData.url);
-    } else {
-      setError("Failed to start checkout");
+    if (!checkoutRes.ok) {
+      setError(checkoutData.error ?? t("checkoutFailed"));
       setLoading(false);
+      return;
     }
+
+    if (checkoutData.devMode && checkoutData.url) {
+      router.push(checkoutData.url);
+      return;
+    }
+
+    if (checkoutData.action && checkoutData.fields) {
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = checkoutData.action;
+
+      for (const [name, value] of Object.entries(checkoutData.fields)) {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = name;
+        input.value = String(value);
+        form.appendChild(input);
+      }
+
+      document.body.appendChild(form);
+      form.submit();
+      return;
+    }
+
+    setError(t("checkoutFailed"));
+    setLoading(false);
   }
 
   if (!activity) {
@@ -129,15 +162,15 @@ export default function BookingPage({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold text-[var(--color-text)]">Book: {activity.title}</h1>
-      <p className="mt-2 text-gray-500">
-        Select a date, time, and number of guests — no account required
-      </p>
+      <h1 className="text-3xl font-bold text-[var(--color-text)]">
+        {t("title", { activity: activity.title })}
+      </h1>
+      <p className="mt-2 text-gray-500">{t("subtitle")}</p>
 
       <div className="mt-8 space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>1. Choose a Date</CardTitle>
+            <CardTitle>{t("stepDate")}</CardTitle>
           </CardHeader>
           <CardContent className="flex justify-center">
             <Calendar
@@ -158,7 +191,7 @@ export default function BookingPage({
         {selectedDate && (
           <Card>
             <CardHeader>
-              <CardTitle>2. Choose a Time</CardTitle>
+              <CardTitle>{t("stepTime")}</CardTitle>
             </CardHeader>
             <CardContent>
               {daySlots.length > 0 ? (
@@ -184,7 +217,9 @@ export default function BookingPage({
                             {format(new Date(slot.endTime), "h:mm a")}
                           </p>
                           <p className="text-sm text-gray-500">
-                            {available} spot{available !== 1 ? "s" : ""} left
+                            {available === 1
+                              ? t("spotsLeft", { count: available })
+                              : t("spotsLeftPlural", { count: available })}
                           </p>
                         </div>
                       </button>
@@ -192,7 +227,7 @@ export default function BookingPage({
                   })}
                 </div>
               ) : (
-                <p className="text-gray-500">No slots available on this date.</p>
+                <p className="text-gray-500">{t("noSlots")}</p>
               )}
             </CardContent>
           </Card>
@@ -201,53 +236,62 @@ export default function BookingPage({
         {selectedSlot && (
           <Card>
             <CardHeader>
-              <CardTitle>3. Guests & Checkout</CardTitle>
-            </CardHeader>
-            <CardHeader>
-              <CardTitle>3. {isLoggedIn ? "Guests & Checkout" : "Your Details"}</CardTitle>
+              <CardTitle>{isLoggedIn ? t("stepCheckout") : t("stepDetails")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {!isLoggedIn && (
                 <>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <Label htmlFor="name">Full name</Label>
+                      <Label htmlFor="name">{t("fullName")}</Label>
                       <Input
                         id="name"
                         value={guestName}
                         onChange={(e) => setGuestName(e.target.value)}
                         required
-                        placeholder="Jane Traveler"
+                        placeholder={t("namePlaceholder")}
                         className="mt-1"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">{t("email")}</Label>
                       <Input
                         id="email"
                         type="email"
                         value={guestEmail}
                         onChange={(e) => setGuestEmail(e.target.value)}
                         required
-                        placeholder="you@example.com"
+                        placeholder={t("emailPlaceholder")}
                         className="mt-1"
                       />
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500">
-                    We&apos;ll send your booking confirmation to this email. No account needed.
-                  </p>
+                  <div>
+                    <Label htmlFor="phone">{t("phone")}</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={guestPhone}
+                      onChange={(e) => setGuestPhone(e.target.value)}
+                      placeholder={t("phonePlaceholder")}
+                      className="mt-1"
+                    />
+                    <p className="mt-1 text-sm text-gray-500">{t("phoneNote")}</p>
+                  </div>
+                  <p className="text-sm text-gray-500">{t("guestEmailNote")}</p>
                 </>
               )}
 
               {isLoggedIn && (
                 <p className="text-sm text-gray-500">
-                  Booking as {session.user.name ?? session.user.email}
+                  {t("bookingAs", {
+                    name: session.user.name ?? session.user.email ?? "",
+                  })}
                 </p>
               )}
 
               <div>
-                <Label htmlFor="guests">Number of Guests</Label>
+                <Label htmlFor="guests">{t("guestCount")}</Label>
                 <div className="mt-2 flex items-center gap-2">
                   <Users className="h-4 w-4 text-gray-400" />
                   <Input
@@ -261,14 +305,24 @@ export default function BookingPage({
                     }
                     className="w-24"
                   />
-                  <span className="text-sm text-gray-500">max {maxGuests}</span>
+                  <span className="text-sm text-gray-500">{t("maxGuests", { count: maxGuests })}</span>
                 </div>
               </div>
 
               <div className="rounded-[var(--radius)] bg-gray-50 p-4">
                 <div className="flex justify-between text-sm">
-                  <span>{formatPrice(activity.price)} × {guestCount} guest{guestCount !== 1 ? "s" : ""}</span>
-                  <span className="font-bold">{formatPrice(total)}</span>
+                  <span>
+                    {guestCount === 1
+                      ? t("guestsLine", {
+                          price: formatPrice(activity.price, locale),
+                          count: guestCount,
+                        })
+                      : t("guestsLinePlural", {
+                          price: formatPrice(activity.price, locale),
+                          count: guestCount,
+                        })}
+                  </span>
+                  <span className="font-bold">{formatPrice(total, locale)}</span>
                 </div>
               </div>
 
@@ -287,7 +341,9 @@ export default function BookingPage({
                   (!isLoggedIn && (!guestName.trim() || !guestEmail.trim()))
                 }
               >
-                {loading ? "Processing..." : `Proceed to Payment — ${formatPrice(total)}`}
+                {loading
+                  ? t("processing")
+                  : t("proceedToPayment", { total: formatPrice(total, locale) })}
               </Button>
             </CardContent>
           </Card>

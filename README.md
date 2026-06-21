@@ -1,9 +1,11 @@
 # Tourist Booking
 
-A full-stack tourist activities booking website built with Next.js, PostgreSQL/SQLite, Stripe, and an admin theme builder.
+A full-stack tourist activities booking website built with Next.js, PostgreSQL/SQLite, PayFast, and an admin theme builder.
 
 ## Features
 
+- **WhatsApp integration** — click-to-chat button, optional booking confirmations & admin alerts via Business API
+- **Admin analytics** — revenue, trends, top activities, booking status breakdown
 - **Guest checkout** — book without creating an account
 - **Find booking** — look up or cancel with email + reference (`/booking/lookup`)
 - **Guest reviews** — review link sent in confirmation email
@@ -22,6 +24,14 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000)
 
+### Languages
+
+The site detects the browser language automatically on each visit. Supported locales:
+
+`en`, `af`, `fr`, `de`, `es`, `pt`, `nl`, `zh`, `ja`, `ar`
+
+Translation files live in `messages/`. Edit `messages/en.json` as the source of truth, then update other locales or run `node scripts/generate-locales.mjs` after extending the script catalog.
+
 ### Demo Accounts
 
 | Role     | Email                  | Password     |
@@ -38,9 +48,15 @@ Copy `.env.example` to `.env`. Key variables:
 | `DATABASE_URL` | SQLite locally (`file:./dev.db`) or PostgreSQL in production |
 | `NEXTAUTH_SECRET` / `AUTH_SECRET` | Session encryption |
 | `NEXT_PUBLIC_APP_URL` | Public site URL (emails, sitemap) |
-| `STRIPE_*` | Payment processing |
+| `PAYFAST_MERCHANT_ID` / `PAYFAST_MERCHANT_KEY` | PayFast merchant credentials |
+| `PAYFAST_PASSPHRASE` | PayFast salt passphrase (required for live; set in sandbox too) |
+| `PAYFAST_SANDBOX` | `true` (default) for sandbox, `false` for live |
+| `NEXT_PUBLIC_CURRENCY` | Display currency (default `ZAR`) |
 | `RESEND_*` | Booking & contact emails |
 | `CONTACT_EMAIL` | Where contact form submissions go |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Public WhatsApp number for chat button (country code, no `+`) |
+| `WHATSAPP_ACCESS_TOKEN` / `WHATSAPP_PHONE_NUMBER_ID` | Meta WhatsApp Business Cloud API (automated messages) |
+| `WHATSAPP_ADMIN_NUMBER` | Admin phone for new booking & contact alerts |
 
 ## Production Deployment (Vercel + Neon)
 
@@ -73,27 +89,25 @@ vercel
 
 Add all environment variables from `.env.example` in the Vercel dashboard.
 
-### 3. Stripe Webhooks
+### 3. PayFast ITN (Instant Transaction Notification)
 
-After deploy, add a webhook in Stripe Dashboard:
+After deploy, PayFast will POST payment confirmations to:
 
-- URL: `https://your-domain.com/api/stripe/webhook`
-- Events: `checkout.session.completed`
-- Copy the signing secret to `STRIPE_WEBHOOK_SECRET`
+- URL: `https://your-domain.com/api/payfast/notify`
 
-For local testing:
+Set this as the **notify URL** in your PayFast dashboard, or it is sent automatically per checkout.
 
-```bash
-stripe listen --forward-to localhost:3000/api/stripe/webhook
-```
+For local ITN testing, expose your dev server with [ngrok](https://ngrok.com) and set `NEXT_PUBLIC_APP_URL` to the public URL.
+
+Sandbox credentials and test cards: [PayFast Sandbox](https://sandbox.payfast.co.za)
+
+Without PayFast/Resend configured, the app runs in **dev mode** — bookings auto-confirm and emails log to the console.
 
 ### 4. Resend Email
 
 1. Create a [Resend](https://resend.com) account
 2. Verify your domain
 3. Set `RESEND_FROM_EMAIL` and `RESEND_API_KEY`
-
-Without Stripe/Resend, the app runs in **dev mode** — bookings auto-confirm and emails log to the console.
 
 ## Docker PostgreSQL (Local)
 
@@ -113,7 +127,7 @@ app/
   admin/             # Admin dashboard
   api/               # REST API routes
 components/          # UI, layout, admin, booking
-lib/                 # Auth, db, email, stripe, booking helpers
+lib/                 # Auth, db, email, payfast, booking helpers
 prisma/              # Schema & seed
 ```
 
@@ -129,4 +143,4 @@ Visit `/admin` when logged in as admin:
 
 ## Tech Stack
 
-Next.js 16 · React · Tailwind CSS · Prisma · NextAuth · Stripe · Resend
+Next.js 16 · React · Tailwind CSS · Prisma · NextAuth · PayFast · Resend

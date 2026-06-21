@@ -35,6 +35,22 @@ async function main() {
     },
   });
 
+  const partner = await prisma.wholesaler.upsert({
+    where: { slug: "cape-adventures-co" },
+    update: {},
+    create: {
+      name: "Cape Adventures Co.",
+      slug: "cape-adventures-co",
+      contactName: "Sarah Mitchell",
+      contactEmail: "partners@capeadventures.example",
+      contactPhone: "+27 21 555 0100",
+      website: "https://capeadventures.example",
+      commissionRate: 15,
+      isActive: true,
+      notes: "Sample wholesale partner for demo listings.",
+    },
+  });
+
   const activities = [
     {
       title: "Sunset Kayak Adventure",
@@ -49,6 +65,7 @@ async function main() {
       ],
       category: "Water Sports",
       isPublished: true,
+      wholesalerId: partner.id,
     },
     {
       title: "Old Town Walking Tour",

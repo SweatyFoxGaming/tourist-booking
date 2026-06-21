@@ -45,40 +45,42 @@ export default function AdminBookingsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Bookings</h1>
-      <p className="text-gray-500">View and manage all customer bookings</p>
+      <h1 className="text-2xl font-bold text-white">Bookings</h1>
+      <p className="text-slate-300">View and manage all customer bookings</p>
 
       {loading ? (
-        <div className="mt-8 h-64 animate-pulse rounded-[var(--radius)] bg-gray-200" />
+        <div className="mt-8 h-64 animate-pulse rounded-xl bg-slate-800" />
       ) : (
-        <div className="mt-8 overflow-x-auto rounded-[var(--radius)] border bg-white">
+        <div className="mt-8 overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/60">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-gray-50 text-left text-gray-500">
-                <th className="p-4">Customer</th>
-                <th className="p-4">Activity</th>
-                <th className="p-4">Date</th>
-                <th className="p-4">Guests</th>
-                <th className="p-4">Total</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Actions</th>
+              <tr className="border-b border-slate-800 text-left text-slate-300">
+                <th className="p-4 font-medium">Customer</th>
+                <th className="p-4 font-medium">Activity</th>
+                <th className="p-4 font-medium">Date</th>
+                <th className="p-4 font-medium">Guests</th>
+                <th className="p-4 font-medium">Total</th>
+                <th className="p-4 font-medium">Status</th>
+                <th className="p-4 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {bookings.map((booking) => (
-                <tr key={booking.id} className="border-b last:border-0">
+                <tr key={booking.id} className="border-b border-slate-800/80 last:border-0">
                   <td className="p-4">
-                    <div>{booking.user?.name ?? booking.guestName ?? "—"}</div>
-                    <div className="text-gray-400">
+                    <div className="text-white">
+                      {booking.user?.name ?? booking.guestName ?? "—"}
+                    </div>
+                    <div className="text-slate-400">
                       {booking.user?.email ?? booking.guestEmail ?? "—"}
                     </div>
                   </td>
-                  <td className="p-4">{booking.activity.title}</td>
-                  <td className="p-4">
+                  <td className="p-4 text-slate-200">{booking.activity.title}</td>
+                  <td className="p-4 text-slate-200">
                     {format(new Date(booking.slot.startTime), "MMM d, yyyy h:mm a")}
                   </td>
-                  <td className="p-4">{booking.guestCount}</td>
-                  <td className="p-4">{formatPrice(booking.totalPrice)}</td>
+                  <td className="p-4 text-slate-200">{booking.guestCount}</td>
+                  <td className="p-4 text-emerald-300">{formatPrice(booking.totalPrice)}</td>
                   <td className="p-4">
                     <Badge
                       variant={
@@ -108,7 +110,7 @@ export default function AdminBookingsPage() {
             </tbody>
           </table>
           {bookings.length === 0 && (
-            <p className="p-8 text-center text-gray-500">No bookings yet.</p>
+            <p className="p-8 text-center text-slate-400">No bookings yet.</p>
           )}
         </div>
       )}

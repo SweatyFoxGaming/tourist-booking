@@ -7,7 +7,7 @@ import { formatDuration, formatPrice, asStringArray } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Clock, Star, Shield } from "lucide-react";
+import { MapPin, Clock, Star, Shield, Handshake } from "lucide-react";
 import { ReviewSection } from "@/components/activities/ReviewSection";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -38,6 +38,7 @@ export default async function ActivityDetailPage({ params }: Params) {
   const activity = await prisma.activity.findFirst({
     where: { slug, isPublished: true },
     include: {
+      wholesaler: { select: { id: true, name: true, slug: true, isActive: true } },
       reviews: {
         where: { isVisible: true },
         include: { user: { select: { name: true } } },
@@ -56,6 +57,8 @@ export default async function ActivityDetailPage({ params }: Params) {
 
   const images = asStringArray(activity.images);
   const image = images[0] ?? "/placeholder-activity.jpg";
+  const partner =
+    activity.wholesaler?.isActive === true ? activity.wholesaler : null;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -72,7 +75,15 @@ export default async function ActivityDetailPage({ params }: Params) {
         </div>
 
         <div>
-          <Badge>{activity.category}</Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge>{activity.category}</Badge>
+            {partner && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Handshake className="h-3 w-3" />
+                Partner: {partner.name}
+              </Badge>
+            )}
+          </div>
           <h1 className="mt-3 text-3xl font-bold text-[var(--color-text)]">
             {activity.title}
           </h1>

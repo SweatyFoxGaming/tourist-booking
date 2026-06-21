@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { createReviewToken } from "@/lib/booking";
 
-export async function confirmBooking(bookingId: string, stripeSessionId?: string) {
+export async function confirmBooking(bookingId: string, paymentReference?: string) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: { slot: true },
@@ -19,7 +19,7 @@ export async function confirmBooking(bookingId: string, stripeSessionId?: string
       data: {
         status: "CONFIRMED",
         reviewToken,
-        ...(stripeSessionId ? { stripeSessionId } : {}),
+        ...(paymentReference ? { paymentReference } : {}),
       },
     }),
     prisma.activitySlot.update({

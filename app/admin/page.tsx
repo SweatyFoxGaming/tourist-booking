@@ -1,86 +1,141 @@
 import Link from "next/link";
-import { prisma } from "@/lib/db";
-import { formatPrice } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, Map, BookOpen, Users } from "lucide-react";
+import { getAdminAnalytics } from "@/lib/admin-analytics";
+import { formatPrice } from "@/lib/utils";
+import {
+  AdminStatCard,
+  BookingTrendChart,
+  StatusBreakdown,
+  TopActivitiesTable,
+} from "@/components/admin/AnalyticsCharts";
+import { isWhatsAppConfigured } from "@/lib/whatsapp";
+import { getWhatsAppBusinessNumber } from "@/lib/whatsapp-public";
 
 export default async function AdminDashboard() {
-  const [activityCount, bookingCount, userCount, recentBookings, revenue] =
-    await Promise.all([
-      prisma.activity.count(),
-      prisma.booking.count({ where: { status: "CONFIRMED" } }),
-      prisma.user.count({ where: { role: "CUSTOMER" } }),
-      prisma.booking.findMany({
-        take: 5,
-        orderBy: { createdAt: "desc" },
-        include: {
-          user: { select: { name: true, email: true } },
-          activity: { select: { title: true } },
-        },
-      }),
-      prisma.booking.aggregate({
-        where: { status: "CONFIRMED" },
-        _sum: { totalPrice: true },
-      }),
-    ]);
-
-  const totalRevenue = Number(revenue._sum.totalPrice ?? 0);
-
-  const stats = [
-    { label: "Activities", value: activityCount, icon: Map },
-    { label: "Confirmed Bookings", value: bookingCount, icon: BookOpen },
-    { label: "Customers", value: userCount, icon: Users },
-    { label: "Revenue", value: formatPrice(totalRevenue), icon: DollarSign },
-  ];
+  const analytics = await getAdminAnalytics();
+  const whatsAppLive = isWhatsAppConfigured();
+  const whatsAppNumber = getWhatsAppBusinessNumber();
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Dashboard</h1>
-      <p className="text-gray-500">Overview of your booking platform</p>
-
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.label}>
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="rounded-[var(--radius)] bg-[var(--color-primary)]/10 p-3">
-                <stat.icon className="h-5 w-5 text-[var(--color-primary)]" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">{stat.label}</p>
-                <p className="text-2xl font-bold">{stat.value}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+    <div className="space-y-8">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-white">Analytics</h1>
+          <p className="mt-1 text-slate-300">
+            Bookings, revenue, and platform performance at a glance
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant={whatsAppLive ? "success" : "warning"}>
+            WhatsApp {whatsAppLive ? "connected" : "not configured"}
+          </Badge>
+          {whatsAppNumber && (
+            <Badge variant="outline">+{whatsAppNumber}</Badge>
+          )}
+        </div>
       </div>
 
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>Recent Bookings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {recentBookings.length > 0 ? (
-            <div className="overflow-x-auto">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <AdminStatCard
+          label="Total revenue"
+          value={formatPrice(analytics.totalRevenue)}
+          hint={`${analytics.confirmedCount} confirmed bookings`}
+          accent="emerald"
+        />
+        <AdminStatCard
+          label="This month"
+          value={formatPrice(analytics.monthRevenue)}
+          hint={`${analytics.monthBookingCount} bookings`}
+          accent="blue"
+        />
+        <AdminStatCard
+          label="Today"
+          value={analytics.todayBookings}
+          hint={`${analytics.weekBookingCount} this week`}
+          accent="amber"
+        />
+        <AdminStatCard
+          label="Avg. booking value"
+          value={formatPrice(analytics.avgBookingValue)}
+          hint={
+            analytics.reviewCount > 0
+              ? `${analytics.avgRating.toFixed(1)}★ from ${analytics.reviewCount} reviews`
+              : "No reviews yet"
+          }
+          accent="rose"
+        />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-3">
+        <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-6 xl:col-span-2">
+          <h2 className="text-lg font-semibold text-white">Booking trend</h2>
+          <div className="mt-6">
+            <BookingTrendChart data={analytics.bookingTrend} />
+          </div>
+        </section>
+
+        <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-6">
+          <h2 className="text-lg font-semibold text-white">Booking status</h2>
+          <div className="mt-6">
+            <StatusBreakdown counts={analytics.statusCounts} />
+          </div>
+          <div className="mt-8 grid grid-cols-2 gap-4 border-t border-slate-800 pt-6 text-sm">
+            <div>
+              <p className="text-slate-300">Guest bookings</p>
+              <p className="mt-1 text-2xl font-bold text-white">{analytics.guestBookingCount}</p>
+            </div>
+            <div>
+              <p className="text-slate-300">Registered users</p>
+              <p className="mt-1 text-2xl font-bold text-white">{analytics.registeredBookingCount}</p>
+            </div>
+            <div>
+              <p className="text-slate-300">Activities</p>
+              <p className="mt-1 text-2xl font-bold text-white">{analytics.activityCount}</p>
+            </div>
+            <div>
+              <p className="text-slate-300">Customers</p>
+              <p className="mt-1 text-2xl font-bold text-white">{analytics.userCount}</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-6">
+          <h2 className="text-lg font-semibold text-white">Top activities</h2>
+          <div className="mt-6">
+            <TopActivitiesTable activities={analytics.topActivities} />
+          </div>
+        </section>
+
+        <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-6">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-lg font-semibold text-white">Recent bookings</h2>
+            <Link href="/admin/bookings" className="text-sm text-emerald-400 hover:underline">
+              View all
+            </Link>
+          </div>
+          <div className="mt-6 overflow-x-auto">
+            {analytics.recentBookings.length > 0 ? (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b text-left text-gray-500">
-                    <th className="pb-3 pr-4">Customer</th>
-                    <th className="pb-3 pr-4">Activity</th>
-                    <th className="pb-3 pr-4">Status</th>
-                    <th className="pb-3">Total</th>
+                  <tr className="border-b border-slate-800 text-left text-slate-300">
+                    <th className="pb-3 pr-4 font-medium">Customer</th>
+                    <th className="pb-3 pr-4 font-medium">Activity</th>
+                    <th className="pb-3 pr-4 font-medium">Status</th>
+                    <th className="pb-3 font-medium">Total</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {recentBookings.map((booking) => (
-                    <tr key={booking.id} className="border-b last:border-0">
-                      <td className="py-3 pr-4">
+                  {analytics.recentBookings.map((booking) => (
+                    <tr key={booking.id} className="border-b border-slate-800/80 last:border-0">
+                      <td className="py-3 pr-4 text-slate-200">
                         {booking.user?.name ??
                           booking.guestName ??
                           booking.user?.email ??
                           booking.guestEmail}
                       </td>
-                      <td className="py-3 pr-4">{booking.activity.title}</td>
+                      <td className="py-3 pr-4 text-white">{booking.activity.title}</td>
                       <td className="py-3 pr-4">
                         <Badge
                           variant={
@@ -94,23 +149,19 @@ export default async function AdminDashboard() {
                           {booking.status}
                         </Badge>
                       </td>
-                      <td className="py-3">{formatPrice(Number(booking.totalPrice))}</td>
+                      <td className="py-3 text-emerald-300">
+                        {formatPrice(Number(booking.totalPrice))}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
-          ) : (
-            <p className="text-gray-500">No bookings yet.</p>
-          )}
-          <Link
-            href="/admin/bookings"
-            className="mt-4 inline-block text-sm text-[var(--color-primary)] hover:underline"
-          >
-            View all bookings →
-          </Link>
-        </CardContent>
-      </Card>
+            ) : (
+              <p className="text-sm text-slate-400">No bookings yet.</p>
+            )}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

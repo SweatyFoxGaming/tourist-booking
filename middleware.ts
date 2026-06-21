@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import { authConfig } from "@/lib/auth.config";
+import { LOCALE_HEADER, negotiateLocale } from "@/lib/i18n/locale";
 
 const { auth } = NextAuth(authConfig);
 
@@ -19,9 +20,15 @@ export default auth((req) => {
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  const locale = negotiateLocale(req.headers.get("accept-language"));
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set(LOCALE_HEADER, locale);
+
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 });
 
 export const config = {
-  matcher: ["/admin/:path*", "/my-bookings"],
+  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
 };

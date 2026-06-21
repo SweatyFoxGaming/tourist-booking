@@ -71,8 +71,8 @@ export default function SlotManagerPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Manage Slots</h1>
-      <p className="text-gray-500">{activityTitle}</p>
+      <h1 className="text-2xl font-bold text-white">Manage Slots</h1>
+      <p className="text-slate-300">{activityTitle}</p>
 
       <Card className="mt-8">
         <CardHeader>
@@ -131,13 +131,13 @@ export default function SlotManagerPage({
               {slots.map((slot) => (
                 <div
                   key={slot.id}
-                  className="flex items-center justify-between rounded-[var(--radius)] border p-3"
+                  className="flex items-center justify-between rounded-[var(--radius)] border border-slate-700 p-3"
                 >
                   <div>
-                    <p className="font-medium">
+                    <p className="font-medium text-white">
                       {format(new Date(slot.startTime), "EEE, MMM d yyyy · h:mm a")}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-slate-400">
                       {slot.bookedCount}/{slot.capacity} booked
                     </p>
                   </div>
@@ -153,7 +153,7 @@ export default function SlotManagerPage({
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">No upcoming slots.</p>
+            <p className="text-slate-400">No upcoming slots.</p>
           )}
         </CardContent>
       </Card>

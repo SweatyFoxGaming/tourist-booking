@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, MapPin, Clock } from "lucide-react";
+import { Mail, MapPin, Clock, MessageCircle } from "lucide-react";
+import { getWhatsAppChatUrl } from "@/lib/whatsapp-public";
 
 export default function ContactPageClient() {
+  const whatsAppUrl = getWhatsAppChatUrl("Hi! I have a question about Tourist Booking.");
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -69,6 +71,20 @@ export default function ContactPageClient() {
               <p className="text-sm text-gray-500">Within 1–2 business days</p>
             </div>
           </div>
+          {whatsAppUrl && (
+            <a
+              href={whatsAppUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-[var(--radius)] border border-[#25D366]/30 bg-[#25D366]/5 p-4 transition-colors hover:bg-[#25D366]/10"
+            >
+              <MessageCircle className="h-5 w-5 shrink-0 text-[#25D366]" />
+              <div>
+                <p className="font-medium text-[var(--color-text)]">WhatsApp</p>
+                <p className="text-sm text-gray-500">Chat with us instantly</p>
+              </div>
+            </a>
+          )}
         </div>
 
         <Card className="lg:col-span-2">

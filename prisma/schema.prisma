@@ -96,11 +96,31 @@ model Activity {
   cancellationPolicy String         @default("Free cancellation up to 24 hours before the activity start time.")
   cancellationHours  Int            @default(24)
   isPublished        Boolean        @default(false)
+  wholesalerId       String?
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
+  wholesaler         Wholesaler?    @relation(fields: [wholesalerId], references: [id], onDelete: SetNull)
   slots              ActivitySlot[]
   bookings           Booking[]
   reviews            Review[]
+
+  @@index([wholesalerId])
+}
+
+model Wholesaler {
+  id             String     @id @default(cuid())
+  name           String
+  slug           String     @unique
+  contactName    String?
+  contactEmail   String
+  contactPhone   String?
+  website        String?
+  notes          String?
+  commissionRate Float?
+  isActive       Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  activities     Activity[]
 }
 
 model ActivitySlot {
@@ -121,12 +141,13 @@ model Booking {
   userId          String?
   guestName       String?
   guestEmail      String?
+  guestPhone      String?
   activityId      String
   slotId          String
   guestCount      Int
   totalPrice      Float
   status          BookingStatus @default(PENDING)
-  stripeSessionId String?       @unique
+  paymentReference String?      @unique
   reviewToken     String?       @unique
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt

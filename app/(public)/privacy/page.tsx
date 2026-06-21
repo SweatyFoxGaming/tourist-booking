@@ -23,7 +23,7 @@ export default function PrivacyPage() {
           <h2 className="text-lg font-semibold">1. Information We Collect</h2>
           <p className="mt-3 text-gray-600 leading-relaxed">
             When you book an activity, we collect your name, email address, booking details,
-            and payment information (processed securely by Stripe — we do not store card numbers).
+            and payment information (processed securely by PayFast — we do not store card numbers).
             If you create an account, we also store your login credentials in encrypted form.
           </p>
         </section>

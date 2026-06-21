@@ -14,6 +14,7 @@ export async function GET(_request: Request, { params }: Params) {
       OR: [{ id }, { slug: id }],
     },
     include: {
+      wholesaler: { select: { id: true, name: true, slug: true, isActive: true } },
       reviews: {
         where: { isVisible: true },
         include: { user: { select: { name: true } } },
@@ -57,6 +58,7 @@ export async function PUT(request: Request, { params }: Params) {
       cancellationPolicy: body.cancellationPolicy,
       cancellationHours: parseInt(body.cancellationHours, 10),
       isPublished: body.isPublished,
+      wholesalerId: body.wholesalerId ?? null,
     },
   });
 

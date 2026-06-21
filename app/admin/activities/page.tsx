@@ -14,6 +14,7 @@ type Activity = {
   category: string;
   price: number;
   isPublished: boolean;
+  wholesaler?: { name: string } | null;
   _count?: { bookings: number; slots: number };
 };
 
@@ -47,8 +48,8 @@ export default function AdminActivitiesPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Activities</h1>
-          <p className="text-gray-500">Manage tourist activities and availability</p>
+          <h1 className="text-2xl font-bold text-white">Activities</h1>
+          <p className="text-slate-300">Manage tourist activities and availability</p>
         </div>
         <Button asChild>
           <Link href="/admin/activities/new">
@@ -59,27 +60,31 @@ export default function AdminActivitiesPage() {
       </div>
 
       {loading ? (
-        <div className="mt-8 h-64 animate-pulse rounded-[var(--radius)] bg-gray-200" />
+        <div className="mt-8 h-64 animate-pulse rounded-xl bg-slate-800" />
       ) : (
-        <div className="mt-8 overflow-x-auto rounded-[var(--radius)] border bg-white">
+        <div className="mt-8 overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/60">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-gray-50 text-left text-gray-500">
-                <th className="p-4">Title</th>
-                <th className="p-4">Category</th>
-                <th className="p-4">Price</th>
-                <th className="p-4">Slots</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Actions</th>
+              <tr className="border-b border-slate-800 text-left text-slate-300">
+                <th className="p-4 font-medium">Title</th>
+                <th className="p-4 font-medium">Category</th>
+                <th className="p-4 font-medium">Partner</th>
+                <th className="p-4 font-medium">Price</th>
+                <th className="p-4 font-medium">Slots</th>
+                <th className="p-4 font-medium">Status</th>
+                <th className="p-4 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {activities.map((activity) => (
-                <tr key={activity.id} className="border-b last:border-0">
-                  <td className="p-4 font-medium">{activity.title}</td>
-                  <td className="p-4">{activity.category}</td>
-                  <td className="p-4">{formatPrice(activity.price)}</td>
-                  <td className="p-4">{activity._count?.slots ?? 0}</td>
+                <tr key={activity.id} className="border-b border-slate-800/80 last:border-0">
+                  <td className="p-4 font-medium text-white">{activity.title}</td>
+                  <td className="p-4 text-slate-200">{activity.category}</td>
+                  <td className="p-4 text-slate-300">
+                    {activity.wholesaler?.name ?? "—"}
+                  </td>
+                  <td className="p-4 text-slate-200">{formatPrice(activity.price)}</td>
+                  <td className="p-4 text-slate-200">{activity._count?.slots ?? 0}</td>
                   <td className="p-4">
                     <button onClick={() => togglePublish(activity.id, activity.isPublished)}>
                       <Badge variant={activity.isPublished ? "success" : "outline"}>

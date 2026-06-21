@@ -20,3 +20,48 @@ body {
   color: var(--color-text);
   font-family: var(--font-family);
 }
+
+.admin-shell {
+  color: rgb(226 232 240);
+}
+
+.admin-shell :is(h1, h2, h3, h4) {
+  color: rgb(255 255 255);
+}
+
+.admin-shell label {
+  color: rgb(226 232 240);
+}
+
+.admin-shell input:not([type="checkbox"]):not([type="color"]):not([type="file"]),
+.admin-shell textarea {
+  border-color: rgb(51 65 85);
+  background-color: rgb(15 23 42);
+  color: rgb(248 250 252);
+}
+
+.admin-shell input:not([type="checkbox"]):not([type="color"]):not([type="file"])::placeholder,
+.admin-shell textarea::placeholder {
+  color: rgb(148 163 184);
+}
+
+.admin-shell button[role="combobox"] {
+  border-color: rgb(51 65 85);
+  background-color: rgb(15 23 42);
+  color: rgb(248 250 252);
+}
+
+.admin-shell .border-gray-200.bg-white.shadow-sm {
+  border-color: rgb(30 41 59);
+  background-color: rgb(15 23 42 / 0.6);
+  color: rgb(226 232 240);
+}
+
+.admin-shell .border-gray-200.bg-white.shadow-sm h3 {
+  color: rgb(255 255 255);
+}
+
+.admin-shell [class*="rounded-full"].border-gray-300 {
+  border-color: rgb(71 85 105);
+  color: rgb(226 232 240);
+}

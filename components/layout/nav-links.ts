@@ -1,15 +1,15 @@
 export const publicNavLinks = [
-  { href: "/", label: "Home" },
-  { href: "/activities", label: "Activities" },
-  { href: "/about", label: "About Us" },
-  { href: "/contact", label: "Contact" },
+  { href: "/", labelKey: "home" },
+  { href: "/activities", labelKey: "activities" },
+  { href: "/about", labelKey: "about" },
+  { href: "/contact", labelKey: "contact" },
 ] as const;
 
 export const footerLinks = [
   ...publicNavLinks,
-  { href: "/booking/lookup", label: "Find Booking" },
-  { href: "/terms", label: "Terms & Conditions" },
-  { href: "/privacy", label: "Privacy Policy" },
+  { href: "/booking/lookup", labelKey: "findBooking" },
+  { href: "/terms", labelKey: "terms" },
+  { href: "/privacy", labelKey: "privacy" },
 ] as const;
 
 export function isNavActive(pathname: string, href: string) {

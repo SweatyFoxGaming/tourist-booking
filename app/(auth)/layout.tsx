@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { ThemedHeader, ThemedFooter } from "@/components/layout/ThemedHeader";
+import { SupportButton } from "@/components/layout/SupportButton";
 import { getSiteTheme } from "@/lib/theme-server";
 
 function AuthPagesFallback() {
@@ -24,6 +25,7 @@ export default async function AuthLayout({
         <Suspense fallback={<AuthPagesFallback />}>{children}</Suspense>
       </main>
       <ThemedFooter />
+      <SupportButton />
     </>
   );
 }

@@ -1,0 +1,318 @@
+# Instincts generated from https://github.com/SweatyFoxGaming/tourist-booking
+# Generated: 2026-06-28T15:14:27.044Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: tourist-booking-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/SweatyFoxGaming/tourist-booking
+---
+
+# Tourist Booking Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: feat
+
+## Evidence
+
+- 1 commits analyzed
+- Detected conventional commit pattern
+- Examples: feat(os): add AI OS kernel with event bus and agent runtime
+
+---
+id: tourist-booking-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/SweatyFoxGaming/tourist-booking
+---
+
+# Tourist Booking Commit Length
+
+## Action
+
+Write moderate-length commit messages (~59 characters)
+
+## Evidence
+
+- Average commit message length: 59 chars
+- Based on 1 commits
+
+---
+id: tourist-booking-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/SweatyFoxGaming/tourist-booking
+---
+
+# Tourist Booking Naming Files
+
+## Action
+
+Use camelCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: camelCase
+
+---
+id: tourist-booking-import-alias
+trigger: "when importing modules"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/SweatyFoxGaming/tourist-booking
+---
+
+# Tourist Booking Import Alias
+
+## Action
+
+Use path aliases (@/, ~/) instead of relative imports
+
+## Evidence
+
+- Import analysis shows alias pattern
+- Example: import { x } from '@/lib/x'
+
+---
+id: tourist-booking-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/SweatyFoxGaming/tourist-booking
+---
+
+# Tourist Booking Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: tourist-booking-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/SweatyFoxGaming/tourist-booking
+---
+
+# Tourist Booking Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: tourist-booking-instinct-file-naming
+trigger: "When creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: SweatyFoxGaming/tourist-booking
+---
+
+# Tourist Booking Instinct File Naming
+
+## Action
+
+Name the file using camelCase
+
+## Evidence
+
+- Pattern in namingConventions.files
+
+---
+id: tourist-booking-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: SweatyFoxGaming/tourist-booking
+---
+
+# Tourist Booking Instinct Function Naming
+
+## Action
+
+Name the function using camelCase
+
+## Evidence
+
+- Pattern in namingConventions.functions
+
+---
+id: tourist-booking-instinct-class-naming
+trigger: "When defining a new class"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: SweatyFoxGaming/tourist-booking
+---
+
+# Tourist Booking Instinct Class Naming
+
+## Action
+
+Name the class using PascalCase
+
+## Evidence
+
+- Pattern in namingConventions.classes
+
+---
+id: tourist-booking-instinct-constant-naming
+trigger: "When defining a constant"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: SweatyFoxGaming/tourist-booking
+---
+
+# Tourist Booking Instinct Constant Naming
+
+## Action
+
+Name the constant using SCREAMING_SNAKE_CASE
+
+## Evidence
+
+- Pattern in namingConventions.constants
+
+---
+id: tourist-booking-instinct-import-style
+trigger: "When importing modules"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: SweatyFoxGaming/tourist-booking
+---
+
+# Tourist Booking Instinct Import Style
+
+## Action
+
+Use alias import style
+
+## Evidence
+
+- Pattern in importStyle
+
+---
+id: tourist-booking-instinct-export-style
+trigger: "When exporting modules or functions"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: SweatyFoxGaming/tourist-booking
+---
+
+# Tourist Booking Instinct Export Style
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern in exportStyle
+
+---
+id: tourist-booking-instinct-error-handling
+trigger: "When handling potential errors in code"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: SweatyFoxGaming/tourist-booking
+---
+
+# Tourist Booking Instinct Error Handling
+
+## Action
+
+Use try-catch blocks for error handling
+
+## Evidence
+
+- Pattern in errorHandling.style
+
+---
+id: tourist-booking-instinct-git-commit-format
+trigger: "When writing a commit message"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: SweatyFoxGaming/tourist-booking
+---
+
+# Tourist Booking Instinct Git Commit Format
+
+## Action
+
+Use the conventional commit format with the 'feat' prefix for features
+
+## Evidence
+
+- Pattern in commits.prefixes
+- Seen in commit: 'feat(os): add AI OS kernel with event bus and agent runtime'
+
+---
+id: tourist-booking-instinct-git-commit-length
+trigger: "When composing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: SweatyFoxGaming/tourist-booking
+---
+
+# Tourist Booking Instinct Git Commit Length
+
+## Action
+
+Keep the commit message concise, around 59 characters on average
+
+## Evidence
+
+- Pattern in commits.averageLength
+
+---
+id: tourist-booking-instinct-test-location
+trigger: "When adding or updating tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: SweatyFoxGaming/tourist-booking
+---
+
+# Tourist Booking Instinct Test Location
+
+## Action
+
+Place test files in a separate folder from source code
+
+## Evidence
+
+- Pattern in architecture.folderStructure.testLocation
+

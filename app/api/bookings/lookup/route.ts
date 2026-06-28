@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { canCancelBooking } from "@/lib/booking";
+import { cancelBookingWithCapacity } from "@/lib/booking-capacity";
 import { findBookingByEmailAndId } from "@/lib/booking-server";
-import { prisma } from "@/lib/db";
+import { enforceRateLimit } from "@/lib/os/http";
+import { eventBus } from "@/lib/os";
 
 const lookupSchema = z.object({
   email: z.string().email(),
@@ -10,6 +12,14 @@ const lookupSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const limited = enforceRateLimit(request, "booking-lookup", {
+    limit: 15,
+    windowMs: 60_000,
+  });
+  if (limited instanceof NextResponse) {
+    return limited;
+  }
+
   const body = await request.json();
   const parsed = lookupSchema.safeParse(body);
 
@@ -50,6 +60,14 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const limited = enforceRateLimit(request, "booking-cancel", {
+    limit: 10,
+    windowMs: 60_000,
+  });
+  if (limited instanceof NextResponse) {
+    return limited;
+  }
+
   const body = await request.json();
   const parsed = lookupSchema.safeParse(body);
 
@@ -79,16 +97,17 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: cancellation.reason }, { status: 400 });
   }
 
-  await prisma.$transaction([
-    prisma.booking.update({
-      where: { id: booking.id },
-      data: { status: "CANCELLED" },
-    }),
-    prisma.activitySlot.update({
-      where: { id: booking.slotId },
-      data: { bookedCount: { decrement: booking.guestCount } },
-    }),
-  ]);
+  const cancelled = await cancelBookingWithCapacity(booking.id);
+
+  if (cancelled) {
+    await eventBus.emit("booking.cancelled", {
+      bookingId: cancelled.id,
+      activityId: cancelled.activityId,
+      slotId: cancelled.slotId,
+      guestCount: cancelled.guestCount,
+      reason: "guest_lookup_cancel",
+    });
+  }
 
   return NextResponse.json({ success: true, status: "CANCELLED" });
 }

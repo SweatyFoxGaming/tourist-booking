@@ -1,5 +1,6 @@
-import { prisma } from "@/lib/db";
 import { createReviewToken } from "@/lib/booking";
+import { prisma } from "@/lib/db";
+import { eventBus } from "@/lib/os";
 
 export async function confirmBooking(bookingId: string, paymentReference?: string) {
   const booking = await prisma.booking.findUnique({
@@ -13,22 +14,16 @@ export async function confirmBooking(bookingId: string, paymentReference?: strin
 
   const reviewToken = createReviewToken();
 
-  await prisma.$transaction([
-    prisma.booking.update({
-      where: { id: bookingId },
-      data: {
-        status: "CONFIRMED",
-        reviewToken,
-        ...(paymentReference ? { paymentReference } : {}),
-      },
-    }),
-    prisma.activitySlot.update({
-      where: { id: booking.slotId },
-      data: { bookedCount: { increment: booking.guestCount } },
-    }),
-  ]);
+  await prisma.booking.update({
+    where: { id: bookingId },
+    data: {
+      status: "CONFIRMED",
+      reviewToken,
+      ...(paymentReference ? { paymentReference } : {}),
+    },
+  });
 
-  return prisma.booking.findUnique({
+  const confirmed = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
       activity: true,
@@ -36,4 +31,10 @@ export async function confirmBooking(bookingId: string, paymentReference?: strin
       user: true,
     },
   });
+
+  if (confirmed) {
+    await eventBus.emit("booking.confirmed", confirmed);
+  }
+
+  return confirmed;
 }

@@ -5,7 +5,8 @@ import {
   isAiSupportConfigured,
   type ChatMessage,
 } from "@/lib/ai-support";
-import { checkRateLimit, getClientIp, logger } from "@/lib/os";
+import { enforceRateLimit } from "@/lib/os/http";
+import { logger } from "@/lib/os";
 
 const chatSchema = z.object({
   messages: z
@@ -28,21 +29,12 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const rateLimit = checkRateLimit(`support-chat:${getClientIp(request)}`, {
+  const limited = enforceRateLimit(request, "support-chat", {
     limit: 20,
     windowMs: 60_000,
   });
-
-  if (!rateLimit.allowed) {
-    return NextResponse.json(
-      { error: "Too many requests. Please wait before sending another message." },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(Math.ceil(rateLimit.retryAfterMs / 1000)),
-        },
-      }
-    );
+  if (limited instanceof NextResponse) {
+    return limited;
   }
 
   let body: unknown;

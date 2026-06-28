@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { requireAdmin } from "@/lib/auth";
+import {
+  ALLOWED_UPLOAD_TYPES,
+  MAX_UPLOAD_BYTES,
+  uploadFile,
+} from "@/lib/os/storage";
+import { logger } from "@/lib/os/logger";
 
 export async function POST(request: Request) {
   try {
@@ -17,17 +22,42 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
+  if (!ALLOWED_UPLOAD_TYPES.has(file.type)) {
+    return NextResponse.json(
+      { error: "Unsupported file type. Use JPEG, PNG, WebP, GIF, or SVG." },
+      { status: 400 }
+    );
+  }
+
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return NextResponse.json(
+      { error: "File too large. Maximum size is 5 MB." },
+      { status: 400 }
+    );
+  }
+
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
-
-  const uploadsDir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(uploadsDir, { recursive: true });
-
   const ext = path.extname(file.name) || ".png";
   const filename = `${Date.now()}${ext}`;
-  const filepath = path.join(uploadsDir, filename);
 
-  await writeFile(filepath, buffer);
+  try {
+    const result = await uploadFile({
+      buffer,
+      filename,
+      contentType: file.type,
+    });
 
-  return NextResponse.json({ url: `/uploads/${filename}` });
+    logger.info("api.upload", "File uploaded", {
+      provider: result.provider,
+      filename,
+    });
+
+    return NextResponse.json({ url: result.url, provider: result.provider });
+  } catch (error) {
+    logger.error("api.upload", "Upload failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+  }
 }

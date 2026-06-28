@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { auth, requireAdmin } from "@/lib/auth";
+import { cancelBookingWithCapacity } from "@/lib/booking-capacity";
+import { prisma } from "@/lib/db";
+import { eventBus } from "@/lib/os";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -26,16 +28,17 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 
   if (body.status === "CANCELLED") {
-    await prisma.$transaction([
-      prisma.booking.update({
-        where: { id },
-        data: { status: "CANCELLED" },
-      }),
-      prisma.activitySlot.update({
-        where: { id: booking.slotId },
-        data: { bookedCount: { decrement: booking.guestCount } },
-      }),
-    ]);
+    const cancelled = await cancelBookingWithCapacity(id);
+
+    if (cancelled) {
+      await eventBus.emit("booking.cancelled", {
+        bookingId: cancelled.id,
+        activityId: cancelled.activityId,
+        slotId: cancelled.slotId,
+        guestCount: cancelled.guestCount,
+        reason: "user_or_admin_cancel",
+      });
+    }
   } else if (isAdmin && body.status) {
     await prisma.booking.update({
       where: { id },

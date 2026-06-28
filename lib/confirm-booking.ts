@@ -14,20 +14,14 @@ export async function confirmBooking(bookingId: string, paymentReference?: strin
 
   const reviewToken = createReviewToken();
 
-  await prisma.$transaction([
-    prisma.booking.update({
-      where: { id: bookingId },
-      data: {
-        status: "CONFIRMED",
-        reviewToken,
-        ...(paymentReference ? { paymentReference } : {}),
-      },
-    }),
-    prisma.activitySlot.update({
-      where: { id: booking.slotId },
-      data: { bookedCount: { increment: booking.guestCount } },
-    }),
-  ]);
+  await prisma.booking.update({
+    where: { id: bookingId },
+    data: {
+      status: "CONFIRMED",
+      reviewToken,
+      ...(paymentReference ? { paymentReference } : {}),
+    },
+  });
 
   const confirmed = await prisma.booking.findUnique({
     where: { id: bookingId },

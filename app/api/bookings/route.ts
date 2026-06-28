@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth, requireAdmin } from "@/lib/auth";
+import { createBookingWithCapacity } from "@/lib/booking-capacity";
 import { prisma } from "@/lib/db";
 import { eventBus } from "@/lib/os";
 
@@ -72,27 +73,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid guest count" }, { status: 400 });
   }
 
-  if (slot.bookedCount + guestCount > slot.capacity) {
-    return NextResponse.json({ error: "Not enough capacity" }, { status: 400 });
-  }
-
   const totalPrice = Number(slot.activity.price) * guestCount;
 
   if (session?.user) {
-    const booking = await prisma.booking.create({
-      data: {
-        userId: session.user.id,
-        activityId: body.activityId,
-        slotId: body.slotId,
-        guestCount,
-        totalPrice,
-        status: "PENDING",
-      },
-      include: {
-        activity: true,
-        slot: true,
-      },
+    const result = await createBookingWithCapacity({
+      userId: session.user.id,
+      activityId: body.activityId,
+      slotId: body.slotId,
+      guestCount,
+      totalPrice,
     });
+
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: 409 });
+    }
+
+    const { booking } = result;
 
     await eventBus.emit("booking.created", {
       bookingId: booking.id,
@@ -122,22 +118,21 @@ export async function POST(request: Request) {
     );
   }
 
-  const booking = await prisma.booking.create({
-    data: {
-      guestName: parsed.data.guestName,
-      guestEmail: parsed.data.guestEmail,
-      guestPhone: parsed.data.guestPhone?.trim() || null,
-      activityId: parsed.data.activityId,
-      slotId: parsed.data.slotId,
-      guestCount: parsed.data.guestCount,
-      totalPrice,
-      status: "PENDING",
-    },
-    include: {
-      activity: true,
-      slot: true,
-    },
+  const result = await createBookingWithCapacity({
+    guestName: parsed.data.guestName,
+    guestEmail: parsed.data.guestEmail,
+    guestPhone: parsed.data.guestPhone?.trim() || null,
+    activityId: parsed.data.activityId,
+    slotId: parsed.data.slotId,
+    guestCount: parsed.data.guestCount,
+    totalPrice,
   });
+
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: 409 });
+  }
+
+  const { booking } = result;
 
   await eventBus.emit("booking.created", {
     bookingId: booking.id,

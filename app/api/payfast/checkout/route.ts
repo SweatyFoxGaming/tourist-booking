@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getBookingContact } from "@/lib/booking";
-import { notifyBookingConfirmed } from "@/lib/booking-notifications";
 import { confirmBooking } from "@/lib/confirm-booking";
 import { prisma } from "@/lib/db";
 import { buildPayfastCheckoutData, isPayfastConfigured } from "@/lib/payfast";
@@ -42,11 +41,7 @@ export async function POST(request: Request) {
   }
 
   if (!isPayfastConfigured()) {
-    const confirmed = await confirmBooking(bookingId, `dev_${bookingId}`);
-
-    if (confirmed) {
-      await notifyBookingConfirmed(confirmed);
-    }
+    await confirmBooking(bookingId, `dev_${bookingId}`);
 
     return NextResponse.json({
       url: `${process.env.NEXTAUTH_URL}/booking/success?bookingId=${bookingId}`,

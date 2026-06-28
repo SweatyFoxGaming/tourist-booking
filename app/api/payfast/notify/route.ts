@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { notifyBookingConfirmed } from "@/lib/booking-notifications";
 import { confirmBooking } from "@/lib/confirm-booking";
 import { prisma } from "@/lib/db";
 import {
@@ -58,11 +57,7 @@ export async function POST(request: Request) {
     return new NextResponse("Amount mismatch", { status: 400 });
   }
 
-  const confirmed = await confirmBooking(bookingId, data.pf_payment_id);
-
-  if (confirmed) {
-    await notifyBookingConfirmed(confirmed);
-  }
+  await confirmBooking(bookingId, data.pf_payment_id);
 
   return new NextResponse("OK", { status: 200 });
 }

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/db";
 import { auth, requireAdmin } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { eventBus } from "@/lib/os";
 
 const guestBookingSchema = z.object({
   activityId: z.string(),
@@ -93,6 +94,15 @@ export async function POST(request: Request) {
       },
     });
 
+    await eventBus.emit("booking.created", {
+      bookingId: booking.id,
+      activityId: booking.activityId,
+      slotId: booking.slotId,
+      guestCount: booking.guestCount,
+      totalPrice: Number(booking.totalPrice),
+      userId: booking.userId,
+    });
+
     return NextResponse.json(booking, { status: 201 });
   }
 
@@ -127,6 +137,15 @@ export async function POST(request: Request) {
       activity: true,
       slot: true,
     },
+  });
+
+  await eventBus.emit("booking.created", {
+    bookingId: booking.id,
+    activityId: booking.activityId,
+    slotId: booking.slotId,
+    guestCount: booking.guestCount,
+    totalPrice: Number(booking.totalPrice),
+    userId: booking.userId,
   });
 
   return NextResponse.json(booking, { status: 201 });
